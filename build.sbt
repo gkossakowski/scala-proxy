@@ -11,3 +11,5 @@ resolvers += ScalaToolsSnapshots
 libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-compiler" % _)
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
+
+scalaHome := Some(file("/Users/grek/scala/scala-trunk/build/pack"))

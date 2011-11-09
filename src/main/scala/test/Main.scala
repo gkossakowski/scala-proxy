@@ -5,10 +5,11 @@ import scala.reflect.proxy._
 
 trait Outer {
   
- trait Foo {
-  def foo(x: Int, y: String): Unit
-  def bar_!(): Unit
-}
+  trait Foo {
+    def foo(x: Int, y: String): Unit
+    def bar_!(): Unit
+    var someVar: Int
+  }
 }
 
 /**

@@ -5,10 +5,11 @@ import scala.reflect.proxy._
 
 trait Outer {
   
- trait Foo {
-  def foo(x: Int, y: String): Unit
-  def bar_!(): Unit
-}
+  trait Foo {
+    def foo(x: Int, y: String): Unit
+    def bar_!(): Unit
+    var someVar: Int
+  }
 }
 
 /**
@@ -20,22 +21,28 @@ object Test extends App with Outer {
   
   val h = new InvocationHandler {
     def invoke(proxy: AnyRef, m: Symbol, args: Array[AnyRef]): AnyRef = {
-      //TODO: if method has multiple argument list resultType will be MethodType again
-      //so we need recursive extraction below
-      val MethodType(params, resultType) = m.info
-      val paramsStr = {
-        val names = params.map(_.name.toString)
-        val types = params.map(_.info.toString)
-        ((names zip args zip types) map { case ((n, a), t) => n + ": " + t + " = " + a }).mkString("(", ", ", ")")
+      m.info match {
+        case NullaryMethodType(resultType) =>
+          println("called " + m.decodedName + ": " + resultType)
+          scala.reflect.Defaults(resultType)
+        //TODO: if method has multiple argument list resultType will be MethodType again
+        //so we need recursive extraction below
+        case MethodType(params, resultType) =>
+          val paramsStr = {
+            val names = params.map(_.name.toString)
+            val types = params.map(_.info.toString)
+            ((names zip args zip types) map { case ((n, a), t) => n + ": " + t + " = " + a }).mkString("(", ", ", ")")
+          }
+          println("called " + m.decodedName + paramsStr + ": " + resultType)
+          null
       }
-      println("called " + m.decodedName + paramsStr + ": " + resultType)
-      null
     }
   }
   
   val p = ScalaProxy[Foo](h)
   p.foo(1, "str")
   p.bar_!()
+  p.someVar
   //prints:
   //called foo(x: Int = 1, y: String = str): Unit
   //called bar_!(): Unit

@@ -10,13 +10,31 @@ trait InvocationHandler {
   def invoke(proxy: AnyRef, method: Symbol, args: Array[AnyRef]): AnyRef
 }
 
+object ScalaAbstractProxy {
+  def apply[T <: AnyRef](handler: InvocationHandler)(implicit manifest: Manifest[T]): T = {
+    //val compilerMirror = scala.reflect.runtime.Mirror
+    val clazz = manifest.erasure
+    val implClazz = implClass(clazz)
+    val implInfo = implClazz.companionModule.info
+    lazy val p : T = ScalaProxy[T](new InvocationHandler {
+      def invoke(proxy: AnyRef, method: Symbol, args: Array[AnyRef]): AnyRef = {
+        val methodImpl = implInfo.decl(method.name)
+        if (methodImpl != NoSymbol) {
+          scala.reflect.mirror.invoke(null, methodImpl, (p::args.toList) : _*).asInstanceOf[AnyRef]
+        } else handler.invoke(proxy, method, args)
+      }
+    })
+    p
+  }  
+  def implClass(clazz: Class[_]) = {
+    val implClass = Class.forName(clazz.getName + "$class")
+    classToSymbol(implClass)
+  }
+}
+
 object ScalaProxy {
   def apply[T <: AnyRef](handler: InvocationHandler)(implicit manifest: Manifest[T]): T = {
-    val compilerMirror = scala.reflect.runtime.Mirror
-    println(compilerMirror)
-    println(compilerMirror.getClass())
     val clazz = manifest.erasure
-    println(compilerMirror.classToScala(clazz).fullName)
     val h = new ScalaHandler(handler)
     jreflect.Proxy.newProxyInstance(clazz.getClassLoader(), Array(clazz), h).asInstanceOf[T]
   }

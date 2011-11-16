@@ -18,7 +18,7 @@ object ScalaAbstractProxy {
     val implInfo = implClazz.companionModule.info
     lazy val p : T = ScalaProxy[T](new InvocationHandler {
       def invoke(proxy: AnyRef, method: Symbol, args: Array[AnyRef]): AnyRef = {
-        val methodImpl = implInfo.decl(method.name)
+        val methodImpl = implInfo.declaration(method.name)
         if (methodImpl != NoSymbol) {
           scala.reflect.mirror.invoke(null, methodImpl, (p::args.toList) : _*).asInstanceOf[AnyRef]
         } else handler.invoke(proxy, method, args)

@@ -15,12 +15,12 @@ object ScalaAbstractProxy {
     //val compilerMirror = scala.reflect.runtime.Mirror
     val clazz = manifest.erasure
     val implClazz = implClass(clazz)
-    val implInfo = implClazz.companionModule.info
+    val implTypeSignature = implClazz.companionSymbol.typeSignature
     lazy val p : T = ScalaProxy[T](new InvocationHandler {
       def invoke(proxy: AnyRef, method: Symbol, args: Array[AnyRef]): AnyRef = {
-        val methodImpl = implInfo.declaration(method.name)
+        val methodImpl = implTypeSignature.declaration(method.name)
         if (methodImpl != NoSymbol) {
-          scala.reflect.mirror.invoke(null, methodImpl, (p::args.toList) : _*).asInstanceOf[AnyRef]
+          (scala.reflect.mirror.invoke(null, methodImpl)((p::args.toList) : _*)).asInstanceOf[AnyRef]
         } else handler.invoke(proxy, method, args)
       }
     })
@@ -51,10 +51,10 @@ object ScalaProxy {
       *       be in Mirror class similarly to classToType method defined there.
       */
     private def methodToSymbol(m: jreflect.Method): Symbol = {
-      val ClassInfoType(_, decls, _) = classToSymbol(m.getDeclaringClass).info
+      val ClassInfoType(_, decls, _) = classToSymbol(m.getDeclaringClass).typeSignature
       val jname = m.getName
       //TODO: handle overloaded defs
-      decls.find(_.encodedName == jname).get
+      decls.find(_.name.encoded == jname).get
     }
   }
 }

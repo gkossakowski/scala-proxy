@@ -24,19 +24,19 @@ trait Bar {
 object Test extends App with Outer {
   val h = new InvocationHandler {
     def invoke(proxy: AnyRef, m: Symbol, args: Array[AnyRef]): AnyRef = {
-      m.info match {
+      m.typeSignature match {
         case NullaryMethodType(resultType) =>
-          println("called " + m.decodedName + ": " + resultType)
+          println("called " + m.name.decoded + ": " + resultType)
           scala.reflect.Defaults(resultType)
         //TODO: if method has multiple argument list resultType will be MethodType again
         //so we need recursive extraction below
         case MethodType(params, resultType) =>
           val paramsStr = {
             val names = params.map(_.name.toString)
-            val types = params.map(_.info.toString)
+            val types = params.map(_.typeSignature.toString)
             ((names zip args zip types) map { case ((n, a), t) => n + ": " + t + " = " + a }).mkString("(", ", ", ")")
           }
-          println("called " + m.decodedName + paramsStr + ": " + resultType)
+          println("called " + m.name.decoded + paramsStr + ": " + resultType)
           scala.reflect.Defaults(resultType)
       }
     }

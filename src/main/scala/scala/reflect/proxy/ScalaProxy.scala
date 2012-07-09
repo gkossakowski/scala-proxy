@@ -21,7 +21,7 @@ object ScalaAbstractProxy {
       def invoke(proxy: AnyRef, method: Symbol, args: Array[AnyRef]): AnyRef = {
         val methodImpl = implTypeSignature.declaration(method.name)
         if (methodImpl != NoSymbol) {
-          (cm.reflect(p).reflectMethod(methodImpl asMethodSymbol)(p::args.toList : _*)).asInstanceOf[AnyRef]
+          (cm.reflect(p).reflectMethod(methodImpl.asMethodSymbol)(p::args.toList : _*)).asInstanceOf[AnyRef]
         } else handler.invoke(proxy, method, args)
       }
     })

@@ -13,8 +13,8 @@ trait InvocationHandler {
 }
 
 object ScalaAbstractProxy {
-  def apply[T <: AnyRef](handler: InvocationHandler)(implicit manifest: Manifest[T]): T = {
-    val clazz = manifest.erasure
+  def apply[T <: AnyRef](handler: InvocationHandler)(implicit classTag: ClassTag[T]): T = {
+    val clazz = classTag.runtimeClass
     val implClazz = implClass(clazz)
     val implTypeSignature = implClazz.companionSymbol.typeSignature
     lazy val p : T = ScalaProxy[T](new InvocationHandler {
@@ -34,8 +34,8 @@ object ScalaAbstractProxy {
 }
 
 object ScalaProxy {
-  def apply[T <: AnyRef](handler: InvocationHandler)(implicit manifest: Manifest[T]): T = {
-    val clazz = manifest.erasure
+  def apply[T <: AnyRef](handler: InvocationHandler)(implicit classTag: ClassTag[T]): T = {
+    val clazz = classTag.runtimeClass
     val h = new ScalaHandler(handler)
     jreflect.Proxy.newProxyInstance(clazz.getClassLoader(), Array(clazz), h).asInstanceOf[T]
   }

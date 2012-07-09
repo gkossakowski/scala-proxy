@@ -1,7 +1,9 @@
 package scala.reflect.proxy;
 
 import java.lang.{reflect => jreflect}
-import scala.reflect.mirror._
+import scala.reflect.{ClassTag, classTag}
+import scala.reflect.runtime.universe._
+import scala.reflect.runtime.{currentMirror => cm}
 
 /**
  * Scala counterpart of java.lang.reflect.InvocationHandler
@@ -12,7 +14,6 @@ trait InvocationHandler {
 
 object ScalaAbstractProxy {
   def apply[T <: AnyRef](handler: InvocationHandler)(implicit manifest: Manifest[T]): T = {
-    //val compilerMirror = scala.reflect.runtime.Mirror
     val clazz = manifest.erasure
     val implClazz = implClass(clazz)
     val implTypeSignature = implClazz.companionSymbol.typeSignature
@@ -20,7 +21,7 @@ object ScalaAbstractProxy {
       def invoke(proxy: AnyRef, method: Symbol, args: Array[AnyRef]): AnyRef = {
         val methodImpl = implTypeSignature.declaration(method.name)
         if (methodImpl != NoSymbol) {
-          (scala.reflect.mirror.invoke(null, methodImpl)((p::args.toList) : _*)).asInstanceOf[AnyRef]
+          (cm.reflect(p).reflectMethod(methodImpl asMethodSymbol)(p::args.toList : _*)).asInstanceOf[AnyRef]
         } else handler.invoke(proxy, method, args)
       }
     })
@@ -28,7 +29,7 @@ object ScalaAbstractProxy {
   }  
   def implClass(clazz: Class[_]) = {
     val implClass = Class.forName(clazz.getName + "$class")
-    classToSymbol(implClass)
+    cm.classSymbol(implClass)
   }
 }
 
@@ -51,7 +52,7 @@ object ScalaProxy {
       *       be in Mirror class similarly to classToType method defined there.
       */
     private def methodToSymbol(m: jreflect.Method): Symbol = {
-      val ClassInfoType(_, decls, _) = classToSymbol(m.getDeclaringClass).typeSignature
+      val ClassInfoType(_, decls, _) = cm.classSymbol(m.getDeclaringClass).typeSignature
       val jname = m.getName
       //TODO: handle overloaded defs
       decls.find(_.name.encoded == jname).get

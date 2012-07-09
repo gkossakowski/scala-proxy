@@ -1,6 +1,6 @@
 package test;
 
-import scala.reflect.mirror._
+import scala.reflect.runtime.universe._
 import scala.reflect.proxy._
 
 trait Outer {

@@ -4,7 +4,7 @@ organization := "EPFL"
 
 version := "0.1"
 
-scalaVersion := "2.10.0-M4"
+scalaVersion := "2.10.0-M5"
 
 resolvers += ScalaToolsSnapshots
 
